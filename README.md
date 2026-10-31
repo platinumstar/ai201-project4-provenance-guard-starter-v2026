@@ -39,7 +39,52 @@
 <!-- The path a submission takes, from arriving to the label a reader sees.
      Six or seven steps — this is the trace you wrote in Milestone 1. -->
 
+1. **Arrive.** A client sends `POST /submit` with JSON `{"text", "creator_id"}`. The route checks the input and rejects missing, empty or enormous text with a 400 instead of crashing.
+2. **Signal one (model signal).** `detector.model_signal` runs the text through a local language model and measures perplexity (how predictable the text is). It converts that to a 0–1 score where higher means more likely AI.
+3. **Signal two (style signal).** `stylometry.style_signal` measures the shape of the text (sentence-length spread, type-token ratio, punctuation density) and returns a 0–1 score in the same direction.
+4. **Combine.** `scoring.combine_signals` merges the two scores into one final score.
+5. **Label.** `scoring.score_to_label` maps the final score to a guess (`ai` / `human` / `unsure`) and a plain-language label for the reader.
+6. **Log.** `audit.log_decision` records the `content_id`, both signal scores, the final score and the label, and the route returns them as JSON.
+7. **Appeal.** If the writer disagrees, they send `POST /appeal` with the `content_id` and their reasoning. The item moves to `under_review`.
 
+### The false positive, traced
+
+A student submits a plain, conventional essay they wrote themselves.
+
+- The model signal gives it about 0.70, because plain prose is predictable.
+- The style signal gives it about 0.60, because the sentences are even in length.
+- The combined score is about 0.65. If the AI threshold were set low enough, the label would call this AI.
+- To protect this writer, the "unsure" band has to be wide enough to catch 0.65, with wording that doesn't accuse. They can then send `POST /appeal` with their `content_id` and reasoning, and the item goes to `under_review`.
+
+This scenario decides the thresholds in Milestone 4: an accusation should require a high score, and the middle band should be generous.
+
+### Endpoint contracts
+
+**`POST /submit`**
+
+| | Field | Type | Notes |
+|---|---|---|---|
+| In | `text` | string | Required, non-empty, capped in length |
+| In | `creator_id` | string | Identifies the submitter |
+| Out | `content_id` | string | Needed later by `/appeal` |
+| Out | `guess` | string | `ai`, `human` or `unsure` |
+| Out | `confidence` | float 0–1 | The combined score |
+| Out | `label` | string | The plain-language text the reader sees |
+| Out | `model_score` | float 0–1 | Signal one, higher = more likely AI |
+| Out | `style_score` | float 0–1 | Signal two, higher = more likely AI |
+
+Errors: 400 for missing, empty or oversized `text`; 429 when rate limited.
+
+**`POST /appeal`**
+
+| | Field | Type | Notes |
+|---|---|---|---|
+| In | `content_id` | string | Must match an existing submission |
+| In | `reasoning` | string | Why the writer thinks the result is wrong |
+| Out | `content_id` | string | Echoed back |
+| Out | `status` | string | `under_review` |
+
+Errors: 400 for missing fields; 404 for an unknown `content_id`.
 
 ---
 
@@ -53,19 +98,19 @@
 
 ### Signal one — the model signal
 
-**What it measures:**
+**What it measures:** How predictable the text is to a local language model (perplexity). Low perplexity means the model finds the text unsurprising. The score is scaled to 0–1, higher meaning more likely AI.
 
-**Why that might differ between human and AI writing:**
+**Why that might differ between human and AI writing:** AI text is built from likely next words, so a language model finds it very predictable. Human writing tends to contain more surprising word choices.
 
-**What it can't see:**
+**What it can't see:** Who wrote it. It measures predictability, not authorship. Plain, conventional human writing is also predictable and can score as AI, while formal or heavily edited AI text can score as human.
 
 ### Signal two — the style signal
 
-**What it measures:**
+**What it measures:** The shape of the text without reading it: how much sentence length varies, how much vocabulary repeats (type-token ratio), and how much punctuation is used. Scaled to 0–1, higher meaning more likely AI.
 
-**Why that might differ between human and AI writing:**
+**Why that might differ between human and AI writing:** AI prose tends toward even, mid-length sentences and a narrower vocabulary. Human writing is lumpier, with a three-word sentence next to a forty-word one.
 
-**What it can't see:**
+**What it can't see:** Meaning. It has no idea what the text says, so anything that changes the shape without changing the substance moves it: adding typos, breaking up sentences, or pasting in a quotation. That is cheap to do on purpose.
 
 ### The combining rule
 
