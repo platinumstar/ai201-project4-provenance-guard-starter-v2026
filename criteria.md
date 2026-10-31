@@ -42,63 +42,63 @@ Two things worth knowing before you pick numbers:
   a **miss**.
 
 ---
-## 1.
+## 1. False positives
 
-<!-- Your criterion. It must name a number. -->
+In each of three runs, no more than 1 of 20 human-written samples is labeled
+high-confidence AI (`guess` = `"ai"`, i.e. combined score above
+`AI_THRESHOLD`, currently 0.65 in `config.py`).
 
-
-
-**Why this target:**
-
-
-
----
-
-## 2.
-
-<!-- Your criterion. -->
-
-
-
-**Why this target:**
-
-
+**Why this target:** A wrong AI accusation can have serious consequences for a
+writer, while a missed detection costs the site little, so false positives
+should be rare in every run, not just on average.
 
 ---
 
-## 3.
+## 2. Score spread
 
-<!-- Your criterion. -->
+In each of three runs, score 20 clearly AI-written and 20 clearly
+human-written samples. The mean combined score (0.0–1.0) of the AI group must
+be at least 0.20 higher than the mean of the human group.
 
-
-
-**Why this target:**
-
-
-
----
-
-## 4.
-
-<!-- Your criterion. -->
-
-
-
-**Why this target:**
-
-
+**Why this target:** A consistent 0.20 gap shows the scores meaningfully
+separate the two groups instead of clustering around 0.5.
 
 ---
 
-## 5.
+## 3. Label coverage
 
-<!-- Your criterion. -->
+In each of three runs, across the 40 samples from criterion 2 plus 5 samples I
+judge borderline, at least one submission receives each label: `"human"`,
+`"unsure"` and `"ai"`.
 
+**Why this target:** This confirms that all three intended outcomes are
+reachable in practice, not just on paper in `config.py`.
 
+---
 
-**Why this target:**
+## 4. Appeal path
 
+After I submit a text and receive a `content_id`, `POST /appeal` with that ID
+and a reason returns a response whose status is `under_review`, and `GET /log`
+then shows an entry with that `content_id`, `event` = `"appeal"` and `status` =
+`"under_review"`. An appeal with an unknown `content_id` is refused (404) and
+writes no appeal entry.
 
+**Why this target:** An appeal has to be both acknowledged to the writer and
+recorded, and a typo in the ID must not silently look like success.
+
+---
+
+## 5. Bad input
+
+With `MAX_TEXT_LENGTH = 10000` set in `config.py`, `POST /submit` returns 400
+for each of: missing `text`, empty `text`, and a 10,001-character `text`.
+Immediately afterwards, a valid submission returns 200 with a decision. Each
+rejected request leaves a `rejected` entry in the audit log.
+
+**Why this target:** Specific test inputs make the error behavior
+reproducible, and the final valid submission checks that the service remains
+usable after bad requests.
 
 ---
 
