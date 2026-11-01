@@ -169,11 +169,67 @@ Errors: 400 for missing fields; 404 for an unknown `content_id`.
 ```bash
 $ curl -X POST http://127.0.0.1:5000/submit \
   -H "Content-Type: application/json" \
-  -d '{"text": "...", "creator_id": "..."}'
+  -d '{"text": "I went to the store this morning and bought some bread. It was a nice day, so I walked home slowly.", "creator_id": "me"}'
 ```
 
 ```json
+{
+  "confidence": 0.5,
+  "content_id": "e0aef3f1-2aa0-432d-8249-e2d9ce3dc80e",
+  "guess": "unsure",
+  "label": "PLACEHOLDER",
+  "model_score": 0.7867,
+  "style_score": null
+}
+```
 
+Milestone 3 only has the first signal, so `style_score` is `null` and `confidence` and `label` are placeholders. Milestones 4 and 5 fill them in.
+
+**Bad input (empty body)**
+
+```bash
+$ curl -X POST http://127.0.0.1:5000/submit \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+```json
+{
+  "error": "missing_or_empty_text",
+  "message": "`text` is required and can't be empty."
+}
+```
+
+**What the log shows**
+
+```bash
+$ curl http://127.0.0.1:5000/log
+```
+
+```json
+{
+  "count": 2,
+  "entries": [
+    {
+      "creator_id": "unknown",
+      "event": "rejected",
+      "reason": "missing_or_empty_text",
+      "status": "rejected",
+      "timestamp": "2026-10-31T23:52:19+00:00"
+    },
+    {
+      "combined_score": 0.5,
+      "content_id": "e0aef3f1-2aa0-432d-8249-e2d9ce3dc80e",
+      "creator_id": "me",
+      "guess": "unsure",
+      "label": "PLACEHOLDER",
+      "model_score": 0.7867,
+      "status": "decided",
+      "style_score": null,
+      "timestamp": "2026-11-01T00:19:01+00:00"
+    }
+  ]
+}
 ```
 
 **An appeal**

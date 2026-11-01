@@ -30,7 +30,7 @@ from flask import Flask, jsonify, request
 
 import audit
 import config
-
+import detector
 app = Flask(__name__)
 
 
@@ -201,15 +201,52 @@ def submit():
     """
     payload = request.get_json(silent=True) or {}
 
-    # TODO: delete this and build the route.
+    text = payload.get("text")
+    creator_id = payload.get("creator_id")
+
+    if not isinstance(text, str) or not text.strip():
+        return _reject(creator_id, "missing_or_empty_text", "`text` is required and can't be empty.")
+    if len(text) > config.MAX_TEXT_LENGTH:
+        return _reject(
+            creator_id,
+            "text_too_long",
+            f"`text` can be at most {config.MAX_TEXT_LENGTH} characters.",
+        )
+
+    content_id = str(uuid.uuid4())
+    model_score = detector.model_signal(text)
+
+    # Milestone 3: one signal only. Confidence and label are placeholders
+    # until Milestones 4 and 5.
+    guess = "unsure"
+    confidence = 0.5
+    label = "PLACEHOLDER"
+
+    audit.log_decision(
+        content_id=content_id,
+        creator_id=creator_id or "unknown",
+        guess=guess,
+        model_score=model_score,
+        combined_score=confidence,
+        label=label,
+    )
+
     return jsonify({
-        "error": "not_implemented",
-        "message": "POST /submit isn't built yet — see the TODO in app.py.",
-        "you_sent": {
-            "text_length": len(payload.get("text", "")),
-            "creator_id": payload.get("creator_id"),
-        },
-    }), 501
+        "content_id": content_id,
+        "guess": guess,
+        "confidence": confidence,
+        "label": label,
+        "model_score": model_score,
+        "style_score": None,
+    }), 200
+
+
+
+def _reject(creator_id, reason, message):
+    """A refused input is a 400, and it still leaves a trace in the log."""
+    audit.log_rejection(creator_id=creator_id or "unknown", reason=reason)
+    return jsonify({"error": reason, "message": message}), 400
+
 
 
 @app.post("/appeal")
