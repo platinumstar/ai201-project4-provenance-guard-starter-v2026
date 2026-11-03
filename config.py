@@ -61,6 +61,12 @@ MAX_TEXT_LENGTH = 10000
 WEIGHT_MODEL_SIGNAL = 0.5
 WEIGHT_STYLE_SIGNAL = 0.5
 
+# When the two signals differ by more than this, they are disagreeing, and the
+# combined score is pulled toward 0.5 ("unsure") by DISAGREEMENT_PULL: 0 leaves
+# the average alone, 1 forces it to exactly 0.5.
+DISAGREEMENT_GAP = 0.30
+DISAGREEMENT_PULL = 0.5
+
 
 # ─── Thresholds (Milestone 5) ────────────────────────────────────────────────
 # Where one label becomes another. Scores run 0.0 (confidently human) to 1.0

@@ -106,7 +106,9 @@ Errors: 400 for missing fields; 404 for an unknown `content_id`.
 
 ### Signal two — the style signal
 
-**What it measures:** The shape of the text without reading it: how much sentence length varies, how much vocabulary repeats (type-token ratio), and how much punctuation is used. Scaled to 0–1, higher meaning more likely AI.
+**What it measures:** The shape of the text without reading it: how much sentence length varies (standard deviation over mean) and how much non-terminal punctuation is used (commas, semicolons, colons, dashes, parentheses, quotes, per word). Scaled to 0–1, higher meaning more likely AI. Both measures are averaged equally. `style_signal` returns 0.5, meaning no evidence, for text under 2 sentences or 15 words.
+
+**A measure I built and dropped:** the type-token ratio (unique words over total words). On my five test texts it sat between 0.81 and 0.86 for human and AI writing alike, so it did not discriminate and only added noise. `stylometry.type_token_ratio` still exists but is not part of the score.
 
 **Why that might differ between human and AI writing:** AI prose tends toward even, mid-length sentences and a narrower vocabulary. Human writing is lumpier, with a three-word sentence next to a forty-word one.
 
@@ -117,18 +119,27 @@ Errors: 400 for missing fields; 404 for an unknown `content_id`.
 <!-- Write the rule in words, then give the numbers. What happens when the two
      signals disagree? -->
 
-**The rule:**
+**The rule:** Average the two scores. Where the signals disagree by more than a set gap, pull the average halfway toward 0.5, because two methods that split mean we do not know. Equal weights, since the two signals fail on different inputs and my five test texts did not show a clearly better one to favour: the model signal scored the AI texts as more human, and the style signal scored the plain forum comment as more AI.
 
-**The numbers:**
+**The numbers:** In `config.py`: `WEIGHT_MODEL_SIGNAL = 0.5`, `WEIGHT_STYLE_SIGNAL = 0.5`, `DISAGREEMENT_GAP = 0.30`, `DISAGREEMENT_PULL = 0.5`. That is, `combined = 0.5 * model + 0.5 * style`, then if `|model - style| > 0.30`, `combined += (0.5 - combined) * 0.5`.
 
-**Where it lives:** `scoring.py::combine_signals`
+| Test text | Words | Perplexity | Model | Style | Combined |
+|---|---|---|---|---|---|
+| clearly AI (houseplant care, chatbot-style) | 99 | 53.7 | 0.43 | 0.79 | 0.55 |
+| AI-style descriptive paragraph (bakery) | 85 | 55.6 | 0.42 | 0.85 | 0.57 |
+| clearly human (forum post, short) | 61 | 27.8 | 0.68 | 0.25 | 0.48 |
+| human opening + AI-sounding ending | 124 | 29.7 | 0.66 | 0.51 | 0.58 |
+| plain human (forum comment, begonias) | 129 | 33.3 | 0.62 | 0.63 | 0.62 |
 
-<!-- ⚠️ The grader checks your code against that line. If your rule lives
-     somewhere else, say where. -->
+These come from five short texts (61-129 words), so they are indicative only. Run from a script file: quotes inside a shell argument cut my first runs short, which made two rows wrong until I caught it.
 
-**A case where my two signals split, and what my rule does with it:**
+**A case where my two signals split, and what my rule does with it:** The houseplant text, which I treat as clearly AI. The model signal reads it as 0.43, leaning human. The style signal reads it as 0.79, because the sentences are even and the punctuation is plain. They differ by 0.36, over the 0.30 gap, so the average of 0.61 is pulled to 0.55, in the unsure range. Neither signal's mistake alone decides it.
 
-
+**What the rule cannot fix:**
+- **The model signal runs backwards on my samples.** The two AI texts have higher perplexity (54-56) than the three human texts (28-33), so they score as more human. My guess is that GPT-2, trained on web text, finds casual internet writing predictable and clean chatbot prose less so. I have not tested that beyond five texts.
+- **The style signal carries the separation.** It gives the AI texts 0.79-0.85 and the short human text 0.25, but reads the plain forum comment as 0.63.
+- **Clearly-AI and clearly-human do not separate well.** The AI texts combine to 0.55-0.57, the human texts to 0.48-0.62. The plain human comment (0.62) scores higher than both AI texts and sits just under the 0.65 AI threshold. That is the Milestone 1 false-positive case, and no combining rule can fix two signals that are wrong together.
+- **Weights do not repair it.** Moving to 0.3 model / 0.7 style lifts the AI texts to 0.59-0.61 and lowers the short human text to 0.44, but the plain human comment stays at 0.62. I kept 0.5 / 0.5.
 
 ---
 

@@ -45,6 +45,20 @@ def words(text: str) -> list[str]:
     return re.findall(r"[a-z0-9']+", text.lower())
 
 
+# Tuning constants. Each *_RANGE is (value that reads fully AI, value that reads
+# fully human); _scale maps a raw measure onto 0–1 between them.
+TTR_WINDOW = 100
+MIN_WORDS = 15
+SPREAD_RANGE = (0.2, 0.8)    # stdev / mean of sentence length
+TTR_RANGE = (0.5, 0.9)       # unique / total words
+PUNCT_RANGE = (0.0, 0.2)     # non-terminal punctuation marks per word
+
+
+def _scale(value: float, low: float, high: float) -> float:
+    """Map value onto 0–1, clamped, with `low` -> 0 and `high` -> 1."""
+    return max(0.0, min(1.0, (value - low) / (high - low)))
+
+
 # ── The three measures — YOU BUILD THESE ─────────────────────────────────────
 
 def sentence_length_spread(text: str) -> float:
@@ -64,8 +78,12 @@ def sentence_length_spread(text: str) -> float:
     `stdev` raises on fewer than two values. Decide what that should return
     before the attack set decides for you.
     """
-    # TODO: replace this
-    return 0.0
+    lengths = [len(words(s)) for s in sentences(text)]
+    lengths = [n for n in lengths if n > 0]
+    if len(lengths) < 2:
+        return 0.0  # one sentence has no spread; style_signal treats this as "no evidence"
+    mean = statistics.mean(lengths)
+    return statistics.stdev(lengths) / mean
 
 
 def type_token_ratio(text: str) -> float:
@@ -80,8 +98,11 @@ def type_token_ratio(text: str) -> float:
     directly comparable on it, and if your test inputs vary a lot in length,
     that alone can look like a signal.
     """
-    # TODO: replace this
-    return 0.0
+    # Only the first TTR_WINDOW words, so a long text isn't penalised for length.
+    ws = words(text)[:TTR_WINDOW]
+    if not ws:
+        return 0.0
+    return len(set(ws)) / len(ws)
 
 
 def punctuation_density(text: str) -> float:
@@ -94,8 +115,11 @@ def punctuation_density(text: str) -> float:
         more interesting than full stops, because they vary more between
         writers.
     """
-    # TODO: replace this
-    return 0.0
+    ws = words(text)
+    if not ws:
+        return 0.0
+    marks = re.findall(r"[,;:()\"\u201c\u201d\u2014\u2013-]", text)
+    return len(marks) / len(ws)
 
 
 # ── Combining them ───────────────────────────────────────────────────────────
@@ -122,8 +146,17 @@ def style_signal(text: str) -> float:
     you trust it. Plain and ordinary, not formal: formal prose reads as *human*
     to signal one, and it is plain writing that gets accused.
     """
-    # TODO: replace this
-    return 0.5
+    if len(sentences(text)) < 2 or len(words(text)) < MIN_WORDS:
+        return 0.5  # too little text to measure shape: say "no evidence"
+
+    # Each measure becomes an "AI-likeness" from 0 to 1, higher = more AI.
+    # Low spread and sparse punctuation both read as AI.
+    ai_spread = 1 - _scale(sentence_length_spread(text), *SPREAD_RANGE)
+    ai_punct = 1 - _scale(punctuation_density(text), *PUNCT_RANGE)
+
+    # type_token_ratio is left out: on five test texts it sat at 0.81-0.86 for
+    # human and AI alike, so it added noise, not signal.
+    return (ai_spread + ai_punct) / 2
 
 
 if __name__ == "__main__":
@@ -139,4 +172,3 @@ if __name__ == "__main__":
     print(f"type_token_ratio         {type_token_ratio(text)}")
     print(f"punctuation_density      {punctuation_density(text)}")
     print(f"style_signal             {style_signal(text)}   (higher = more likely AI)")
-    print("\nAll zeros? These are stubs — Milestone 4 is where you build them.")
