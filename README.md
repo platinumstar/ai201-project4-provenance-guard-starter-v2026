@@ -190,29 +190,24 @@ Five generic, repetitive texts all reached the AI label (0.82 to 0.99). My riche
 
 **A submission**
 
-<!-- The response needs content_id, guess, confidence, label, AND both
-     signal scores - model_score and style_score. Unit 8's tools read those
-     two off the response, so leaving them out costs you next unit's
-     diagnostics. -->
-
 ```bash
-$ curl -X POST http://127.0.0.1:5000/submit \
+$ curl -s -X POST http://127.0.0.1:5000/submit \
   -H "Content-Type: application/json" \
-  -d '{"text": "I went to the store this morning and bought some bread. It was a nice day, so I walked home slowly.", "creator_id": "me"}'
+  -d '{"text": "The dopamine hit is definitely more of a thing. When people comment on my posts, I get a nice warm glow. And when last night, just before I went to bed, I saw that my previous post was #1 on the front page of HN, I took a screenshot and posted it to my Fellow Geeks WhatsApp group with the caption.", "creator_id": "writer-2"}'
 ```
 
 ```json
 {
-  "confidence": 0.5,
-  "content_id": "e0aef3f1-2aa0-432d-8249-e2d9ce3dc80e",
-  "guess": "unsure",
-  "label": "PLACEHOLDER",
-  "model_score": 0.7867,
-  "style_score": null
+  "confidence": 0.494691393442623,
+  "content_id": "02de0977-733b-4a13-9e97-7cf182df52ac",
+  "guess": "human",
+  "label": "We think this was probably written by a person.",
+  "model_score": 0.6427,
+  "style_score": 0.33606557377049184
 }
 ```
 
-Milestone 3 only has the first signal, so `style_score` is `null` and `confidence` and `label` are placeholders. Milestones 4 and 5 fill them in.
+The two signals disagree here (model 0.64 leans AI, style 0.34 leans human) by 0.31, just over the 0.30 gap, so the combining rule pulled the average (0.489) up to 0.495, which is still under the 0.50 human threshold. This is a borderline result: a small change in wording could move it into "unsure".
 
 **Bad input (empty body)**
 
@@ -229,10 +224,26 @@ $ curl -X POST http://127.0.0.1:5000/submit \
 }
 ```
 
-**What the log shows**
+**An appeal**
 
 ```bash
-$ curl http://127.0.0.1:5000/log
+$ curl -s -X POST http://127.0.0.1:5000/appeal \
+  -H "Content-Type: application/json" \
+  -d '{"content_id": "02de0977-733b-4a13-9e97-7cf182df52ac", "reasoning": "I wrote this myself."}'
+```
+
+```json
+{
+  "content_id": "02de0977-733b-4a13-9e97-7cf182df52ac",
+  "message": "Thanks. Your appeal has been recorded and this result is now under review.",
+  "status": "under_review"
+}
+```
+
+**What the log shows afterwards**
+
+```bash
+$ curl "http://127.0.0.1:5000/log?limit=2"
 ```
 
 ```json
@@ -240,48 +251,29 @@ $ curl http://127.0.0.1:5000/log
   "count": 2,
   "entries": [
     {
-      "creator_id": "unknown",
-      "event": "rejected",
-      "reason": "missing_or_empty_text",
-      "status": "rejected",
-      "timestamp": "2026-10-31T23:52:19+00:00"
+      "combined_score": 0.494691393442623,
+      "content_id": "02de0977-733b-4a13-9e97-7cf182df52ac",
+      "creator_id": "writer-2",
+      "guess": "human",
+      "label": "We think this was probably written by a person.",
+      "model_score": 0.6427,
+      "status": "decided",
+      "style_score": 0.33606557377049184,
+      "timestamp": "2026-11-03T04:45:55+00:00"
     },
     {
-      "combined_score": 0.5,
-      "content_id": "e0aef3f1-2aa0-432d-8249-e2d9ce3dc80e",
-      "creator_id": "me",
-      "guess": "unsure",
-      "label": "PLACEHOLDER",
-      "model_score": 0.7867,
-      "status": "decided",
-      "style_score": null,
-      "timestamp": "2026-11-01T00:19:01+00:00"
+      "content_id": "02de0977-733b-4a13-9e97-7cf182df52ac",
+      "creator_id": "writer-2",
+      "event": "appeal",
+      "reasoning": "I wrote this myself.",
+      "status": "under_review",
+      "timestamp": "2026-11-03T04:48:58+00:00"
     }
   ]
 }
 ```
 
-**An appeal**
-
-```bash
-$ curl -X POST http://127.0.0.1:5000/appeal \
-  -H "Content-Type: application/json" \
-  -d '{"content_id": "...", "reasoning": "..."}'
-```
-
-```json
-
-```
-
-**What the log shows afterwards**
-
-```bash
-$ curl "http://127.0.0.1:5000/log?limit=3"
-```
-
-```json
-
-```
+The original decision stays in the log unchanged and the appeal sits after it, with the same `content_id`.
 
 ---
 
@@ -289,15 +281,15 @@ $ curl "http://127.0.0.1:5000/log?limit=3"
 
 **Moment 1**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I ran my forum comment through the model and style signals with a python -c one-liner, and asked Claude whether the scores looked right. The begonias comment came back 0.35 model and 1.0 style, and the short dopamine text came back 0.66 and 0.36.
+- *What came back:* Claude re-ran all five texts from a script file and found the numbers didn't match. The straight quotes inside my texts ("difficult diva", "Fellow Geeks") had ended the shell argument early, so Python only received a fragment of the text. The begonias result was really 0.62 model and 0.63 style.
+- *What I changed:* I stopped passing texts on the command line, used the full texts, and replaced the table in Signals and Scoring with the corrected numbers. I also removed the quotes from my curl examples.
 
 **Moment 2**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked Claude to read my three labels as the writer who receives them, saying what I'd think and do next, without rewriting them.
+- *What came back:* Claude said my "unsure" label ("that says nothing bad about you or your work") sounded like a polite suspicion, and that it didn't tell the writer whether anything would happen to them or mention the appeal option, which only the AI label did.
+- *What I changed:* I rewrote "unsure" to say what the system couldn't do, called the result "only a guess, not a finding", and added the appeal option. I also noted my reasoning in Label Variants.
 
 <!-- ═══════════════════════ UNIT 8 — THE TEST ═══════════════════════ -->
 
