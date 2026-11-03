@@ -41,7 +41,7 @@
 
 1. **Arrive.** A client sends `POST /submit` with JSON `{"text", "creator_id"}`. The route checks the input and rejects missing, empty or enormous text with a 400 instead of crashing.
 2. **Signal one (model signal).** `detector.model_signal` runs the text through a local language model and measures perplexity (how predictable the text is). It converts that to a 0–1 score where higher means more likely AI.
-3. **Signal two (style signal).** `stylometry.style_signal` measures the shape of the text (sentence-length spread, type-token ratio, punctuation density) and returns a 0–1 score in the same direction.
+3. **Signal two (style signal).** `stylometry.style_signal` measures the shape of the text (sentence-length spread and punctuation density) and returns a 0–1 score in the same direction.
 4. **Combine.** `scoring.combine_signals` merges the two scores into one final score.
 5. **Label.** `scoring.score_to_label` maps the final score to a guess (`ai` / `human` / `unsure`) and a plain-language label for the reader.
 6. **Log.** `audit.log_decision` records the `content_id`, both signal scores, the final score and the label, and the route returns them as JSON.
@@ -122,6 +122,8 @@ Errors: 400 for missing fields; 404 for an unknown `content_id`.
 **The rule:** Average the two scores. Where the signals disagree by more than a set gap, pull the average halfway toward 0.5, because two methods that split mean we do not know. Equal weights, since the two signals fail on different inputs and my five test texts did not show a clearly better one to favour: the model signal scored the AI texts as more human, and the style signal scored the plain forum comment as more AI.
 
 **The numbers:** In `config.py`: `WEIGHT_MODEL_SIGNAL = 0.5`, `WEIGHT_STYLE_SIGNAL = 0.5`, `DISAGREEMENT_GAP = 0.30`, `DISAGREEMENT_PULL = 0.5`. That is, `combined = 0.5 * model + 0.5 * style`, then if `|model - style| > 0.30`, `combined += (0.5 - combined) * 0.5`.
+
+**Where it lives:** `scoring.py::combine_signals`
 
 | Test text | Words | Perplexity | Model | Style | Combined |
 |---|---|---|---|---|---|
