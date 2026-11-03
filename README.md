@@ -152,16 +152,34 @@ These come from five short texts (61-129 words), so they are indicative only. Ru
 
 | Label | Score range | The exact text a reader sees |
 |---|---|---|
-| high-confidence human |  |  |
-| unsure |  |  |
-| high-confidence AI |  |  |
+| high-confidence human | 0.00 – 0.50 | We think this was probably written by a person. |
+| unsure | 0.50 – 0.65 | Our checks couldn't tell whether this was written by a person or with an AI tool. This is only a guess, not a finding. If you'd like someone to look at it, you can appeal. |
+| high-confidence AI | 0.65 – 1.00 | This looks like it may have been written with an AI tool. If you wrote it yourself, you can appeal and a person will take a look. |
 
 **Why I worded the "unsure" one this way:**
 <!-- It's the hardest of the three. It has to admit uncertainty without
      sounding like an accusation, because the person reading it may well have
      written every word themselves. -->
 
+My first version ended "that says nothing bad about you or your work." Read as a writer, that sounded like a polite suspicion, and it left the reader not knowing whether anything would happen to them. It also didn't mention appeals, which only the AI label did. The current wording says what the system could not do ("couldn't tell"), calls the result "only a guess, not a finding", and gives the appeal option so a writer who gets it always has somewhere to go.
 
+**Thresholds and why:** `HUMAN_THRESHOLD = 0.50`, `AI_THRESHOLD = 0.65` in `config.py`. A false "human" costs less than a false accusation, so I lowered only the human side. My first setting of 0.35 left "human" unreachable: my combined scores for realistic texts ran from 0.48 to 0.62, so everything was "unsure".
+
+**Reachability test:** each label produced by a real submission to `/submit`.
+
+| Text | Combined | Guess | Label |
+|---|---|---|---|
+| Generic textbook-style paragraph about exercise (52 words) | 0.94 | ai | "This looks like it may have been written with an AI tool…" |
+| Chatbot-style paragraph about houseplants (99 words) | 0.55 | unsure | "Our checks couldn't tell…" |
+| Short human forum post (61 words) | 0.48 | human | "We think this was probably written by a person." |
+
+Five generic, repetitive texts all reached the AI label (0.82 to 0.99). My richer AI-written texts (houseplants, bakery) and my plain human forum comment (begonias, 0.62) all landed in "unsure".
+
+**What this tells me about the signals:**
+- The AI label is reached by text that is simple and predictable ("Regular exercise is important for good health. It helps to improve your mood…"). The model signal measures predictability, not authorship.
+- Plain, honest writing, such as a student's or a non-native English writer's, is also simple and predictable, so it can get the AI label. This is the false-positive risk from my Milestone 1 scenario, and I have not tested it with real human samples of that kind.
+- Polished AI prose with richer vocabulary lands in "unsure", so it gets through.
+- The "human" label rests on one 61-word sample, so it is weakly supported.
 
 ---
 
