@@ -322,7 +322,70 @@ I chose 5 submissions per minute and 100 per day to allow a writer to submit and
 <!-- Every attack with its outcome and a held-or-broke mark.
      `run_attacks.py --label before` produces the table. -->
 
+`run_attacks.py --set attack_set --label before`, 56 attacks, `HUMAN_THRESHOLD = 0.50` / `AI_THRESHOLD = 0.65`. MF02 and RQ07 are auto-marked BROKE (5xx); every other verdict is mine.
 
+| ID | Family | Targeting | Status | Content ID | Guess | Score | Verdict |
+|---|---|---|---|---|---|---|---|
+| EV01 | evasion | signal two: typos raise word variety | 200 | `6d3eea48-399c-4820-9e5f-e2775b87a359` | unsure | 0.511 | HELD |
+| EV02 | evasion | signal two: broken-up sentences raise length spread | 200 | `3e8a2ee6-f1a8-4fb7-a8b8-d5dcbedc0279` | human | 0.492 | BROKE |
+| EV03 | evasion | signal two: a pasted quotation changes the shape | 200 | `8f5da756-850c-473f-adcd-216fc1d98f36` | unsure | 0.649 | HELD |
+| EV04 | evasion | signal one: unusual words raise perplexity | 200 | `7c06ff8e-ff4c-4331-9be4-6644100cf79d` | ai | 0.733 | HELD |
+| EV05 | evasion | both signals: heavy human editing pass | 200 | `74f2649a-c75f-4d59-8444-7ed7db055a2c` | human | 0.356 | BROKE |
+| EV06 | evasion | signal two: one very long sentence and one very short | 200 | `82a35f17-c9b2-4c5e-8aa1-2008fb085f7b` | human | 0.496 | BROKE |
+| EV07 | evasion | signal two: padding with punctuation | 200 | `6a717881-2800-4836-bfc5-4fc6ea6939f5` | unsure | 0.543 | HELD |
+| EV08 | evasion | signal one: text below the token window | 200 | `d1e1fb3b-6ef1-4eae-aa61-6e95d20965be` | human | 0.373 | BROKE |
+| EV09 | evasion | both: AI text with a human opening paragraph bolted on | 200 | `dca562a0-2401-4f98-bfc1-03d60b03be70` | ai | 0.673 | HELD |
+| EV10 | evasion | signal two: repeated stanza structure | 200 | `897bc78f-2d8b-4096-b445-f466ee6be620` | ai | 0.909 | HELD |
+| FP01 | false_positive | plain, clear human writing with no flourishes | 200 | `380ddb5f-3abe-48e5-9b3a-f8a4e9456e2e` | ai | 0.677 | BROKE |
+| FP02 | false_positive | human writing in a formal register | 200 | `3afe78eb-0897-4d73-8a4e-9873b6e5e0d7` | ai | 0.836 | BROKE |
+| FP03 | false_positive | a non-native English speaker writing carefully | 200 | `7287f954-91b1-4e58-a2ba-9db9b65c2f28` | ai | 0.849 | BROKE |
+| FP04 | false_positive | a student essay written to a rubric | 200 | `cc927cd2-5059-41d5-bd6d-e5a6c5d16b81` | ai | 0.829 | BROKE |
+| FP05 | false_positive | technical documentation written by a person | 200 | `b389b19e-ad77-475f-be6e-09d5e0092e9b` | ai | 0.832 | BROKE |
+| FP06 | false_positive | a person imitating a formal template | 200 | `1afe49d8-618a-40c0-9f7a-a853e475157e` | ai | 0.788 | BROKE |
+| FP07 | false_positive | human writing that repeats a phrase deliberately | 200 | `fe40eae0-68ed-433d-aeb5-0fc10cab3601` | unsure | 0.589 | HELD |
+| FP08 | false_positive | very short genuine human submission | 200 | `7de55e38-9dbd-41aa-bdaf-dd486f37cacc` | human | 0.411 | HELD |
+| PI01 | prompt_injection | instruction to ignore the check | 200 | `540981dd-bcf5-4992-9ce1-af6fb10af894` | unsure | 0.538 | HELD |
+| PI02 | prompt_injection | instruction disguised as a system message | 200 | `5334e0e8-ae24-4acc-9ce3-8d8d30b67960` | human | 0.429 | HELD |
+| PI03 | prompt_injection | instruction wrapped in the writer's voice | 200 | `078ecc0d-c3df-4ee1-9b32-c64bd9e08745` | ai | 0.669 | HELD |
+| PI04 | prompt_injection | attempt to make the label text hostile | 200 | `a4ca3a15-d4a0-4f61-a028-8545a81ae995` | unsure | 0.570 | HELD |
+| PI05 | prompt_injection | attempt to inject into the audit log | 200 | `38bc5662-6d25-4af3-9697-f868c090ec33` | human | 0.478 | HELD |
+| PI06 | prompt_injection | instruction plus real human text | 200 | `b30e5cea-9997-42b5-83d4-8aa5b6f23e94` | ai | 0.655 | HELD |
+| MF01 | malformed | text is only whitespace | 400 | `—` | — | — | HELD |
+| MF02 | malformed | text is a single character | 500 | `—` | — | — | BROKE |
+| MF03 | malformed | text is control characters | 200 | `ef009f07-4c32-4631-890b-d4669a9d6bcd` | human | 0.375 | BROKE |
+| MF04 | malformed | text is only punctuation | 200 | `634620de-19c4-45df-9429-cbe7ff7a2cce` | human | 0.378 | BROKE |
+| MF05 | malformed | text is a very long single word | 200 | `dd083371-888f-40f4-9fb9-7f0cb46c321f` | unsure | 0.624 | HELD |
+| MF06 | malformed | text is emoji only | 200 | `9da72931-a63d-4a9c-8176-7cf10796795c` | unsure | 0.624 | HELD |
+| MF07 | malformed | text is right-to-left script | 200 | `b5ab861f-3b77-44c2-aba1-f91be9105e2c` | unsure | 0.602 | HELD |
+| MF08 | malformed | text is 60,000 characters | 400 | `—` | — | — | HELD |
+| RQ01 | malformed | no text field at all | 400 | `—` | — | — | HELD |
+| RQ02 | malformed | no creator_id | 200 | `9b343e24-6a42-4da4-8464-69c0cdefa476` | human | 0.370 | HELD |
+| RQ03 | malformed | text is a number | 400 | `—` | — | — | HELD |
+| RQ04 | malformed | text is a list | 400 | `—` | — | — | HELD |
+| RQ05 | malformed | text is null | 400 | `—` | — | — | HELD |
+| RQ06 | malformed | creator_id is an object | 200 | `949d8291-3920-43b4-a148-0c67e46d1d41` | human | 0.387 | BROKE |
+| RQ07 | malformed | body is a JSON array, not an object | 500 | `—` | — | — | BROKE |
+| RQ08 | malformed | body is unparseable JSON | 400 | `—` | — | — | HELD |
+| RQ09 | malformed | body is empty | 400 | `—` | — | — | HELD |
+| RQ10 | malformed | body is form-encoded, not JSON | 429 | `—` | — | — | HELD |
+| RQ11 | malformed | body is JSON claiming to be plain text | 429 | `—` | — | — | HELD |
+| RQ12 | malformed | deeply nested JSON | 400 | `—` | — | — | HELD |
+| FL01_01 | flood_same_creator | 20 rapid submissions from one creator | 200 | `5022dcac-cc92-4688-a149-1b83779ba930` | human | 0.382 | HELD |
+| FL01_02 | flood_same_creator | 20 rapid submissions from one creator | 200 | `6b72855e-01de-4828-8c74-3cb4288239c1` | human | 0.382 | HELD |
+| FL01_03 | flood_same_creator | 20 rapid submissions from one creator | 200 | `85119d3a-81f1-43dd-87ce-26419f9949e3` | human | 0.382 | HELD |
+| FL01_04 | flood_same_creator | 20 rapid submissions from one creator | 200 | `f8096c38-0d6f-4848-b99e-69f887993dbe` | human | 0.382 | HELD |
+| FL01_05 | flood_same_creator | 20 rapid submissions from one creator | 200 | `fab07416-ae18-42b0-9eb6-121f25984274` | human | 0.382 | HELD |
+| FL01_06 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_07 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_08 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_09 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_10 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_11 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_12 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+
+**By family:** evasion 6 held / 4 broke (EV02, EV05, EV06, EV08 — all three exploited the style-signal's 0.5 fallback or a low-perplexity/short-text gap); false_positive 2 held / 6 broke (every formal, rubric-written, or non-native-register human sample landed on the AI label); prompt_injection 6 held / 0 broke (the detector only scores shape and perplexity, so there was nothing for an embedded instruction to act on); malformed 15 held / 5 broke (MF02 and RQ07 crash outright; MF03, MF04 and RQ06 don't crash but still misbehave — see below); flood_same_creator 12 held / 0 broke (exactly 5 through, 7 rejected, matching `RATE_LIMIT_PER_MINUTE = 5`).
+
+Two things worth flagging rather than hiding in a clean HELD/BROKE split: RQ10 and RQ11 both came back 429 instead of exercising their actual malformed-body handling — reproducible on a second, independent run of the full set, so it looks like a request with no extractable `creator_id` falls back to a shared rate-limit key and gets swept up by the other malformed attacks landing in the same minute, rather than being a timing fluke. And RQ02 (missing `creator_id`) I called HELD because the endpoint contract above only marks `text` as required, not `creator_id`.
 
 **Ten audit log entries from the run**
 
@@ -447,7 +510,7 @@ Why these ten, in order: FP02 and FP03 (human formal / non-native writing scored
 **The single worst outcome** — the one I'd least want to explain to a writer
 whose work got caught by it:
 
-
+FP03: a non-native English speaker writing carefully got the high-confidence AI label at 0.849, the highest score of any false-positive attack. It's not just a wrong guess — it's a confident accusation ("This looks like it may have been written with an AI tool") against exactly the kind of writer who already gets disproportionately flagged by AI detectors, because writing carefully in a second language produces the same plain, even, predictable prose both of my signals read as machine-made. FP02 (formal register, 0.836) fails for the same reason. There is no appeal-after-the-fact that undoes having been told your own writing isn't yours.
 
 ---
 
