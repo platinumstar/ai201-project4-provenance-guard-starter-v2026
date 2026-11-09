@@ -329,8 +329,120 @@ I chose 5 submissions per minute and 100 per day to allow a writer to submit and
 <!-- Choose entries that show the interesting failures, not the ten easiest. -->
 
 ```json
-
+[
+  {
+    "combined_score": 0.8360904330495595,
+    "content_id": "3afe78eb-0897-4d73-8a4e-9873b6e5e0d7",
+    "creator_id": "attacker_FP02",
+    "guess": "ai",
+    "label": "This looks like it may have been written with an AI tool. If you wrote it yourself, you can appeal and a person will take a look.",
+    "model_score": 0.7387,
+    "status": "decided",
+    "style_score": 0.9334808660991191,
+    "timestamp": "2026-11-07T22:16:06+00:00"
+  },
+  {
+    "combined_score": 0.849137967149837,
+    "content_id": "7287f954-91b1-4e58-a2ba-9db9b65c2f28",
+    "creator_id": "attacker_FP03",
+    "guess": "ai",
+    "label": "This looks like it may have been written with an AI tool. If you wrote it yourself, you can appeal and a person will take a look.",
+    "model_score": 0.8051,
+    "status": "decided",
+    "style_score": 0.893175934299674,
+    "timestamp": "2026-11-07T22:16:06+00:00"
+  },
+  {
+    "combined_score": 0.49220494505494505,
+    "content_id": "3e8a2ee6-f1a8-4fb7-a8b8-d5dcbedc0279",
+    "creator_id": "attacker_EV02",
+    "guess": "human",
+    "label": "We think this was probably written by a person.",
+    "model_score": 0.5943,
+    "status": "decided",
+    "style_score": 0.3901098901098901,
+    "timestamp": "2026-11-07T22:16:06+00:00"
+  },
+  {
+    "combined_score": 0.4955891304347826,
+    "content_id": "82a35f17-c9b2-4c5e-8aa1-2008fb085f7b",
+    "creator_id": "attacker_EV06",
+    "guess": "human",
+    "label": "We think this was probably written by a person.",
+    "model_score": 0.5727,
+    "status": "decided",
+    "style_score": 0.41847826086956524,
+    "timestamp": "2026-11-07T22:16:06+00:00"
+  },
+  {
+    "combined_score": 0.3726,
+    "content_id": "d1e1fb3b-6ef1-4eae-aa61-6e95d20965be",
+    "creator_id": "attacker_EV08",
+    "guess": "human",
+    "label": "We think this was probably written by a person.",
+    "model_score": 0.2452,
+    "status": "decided",
+    "style_score": 0.5,
+    "timestamp": "2026-11-07T22:16:06+00:00"
+  },
+  {
+    "combined_score": 0.47848239150186844,
+    "content_id": "38bc5662-6d25-4af3-9697-f868c090ec33",
+    "creator_id": "attacker_PI05",
+    "guess": "human",
+    "label": "We think this was probably written by a person.",
+    "model_score": 0.6401,
+    "status": "decided",
+    "style_score": 0.27382956600747366,
+    "timestamp": "2026-11-07T22:16:07+00:00"
+  },
+  {
+    "combined_score": 0.375,
+    "content_id": "ef009f07-4c32-4631-890b-d4669a9d6bcd",
+    "creator_id": "attacker_MF03",
+    "guess": "human",
+    "label": "We think this was probably written by a person.",
+    "model_score": 0.0,
+    "status": "decided",
+    "style_score": 0.5,
+    "timestamp": "2026-11-07T22:16:07+00:00"
+  },
+  {
+    "combined_score": 0.3778,
+    "content_id": "634620de-19c4-45df-9429-cbe7ff7a2cce",
+    "creator_id": "attacker_MF04",
+    "guess": "human",
+    "label": "We think this was probably written by a person.",
+    "model_score": 0.0112,
+    "status": "decided",
+    "style_score": 0.5,
+    "timestamp": "2026-11-07T22:16:07+00:00"
+  },
+  {
+    "combined_score": 0.3873,
+    "content_id": "949d8291-3920-43b4-a148-0c67e46d1d41",
+    "creator_id": {
+      "id": "x"
+    },
+    "guess": "human",
+    "label": "We think this was probably written by a person.",
+    "model_score": 0.0492,
+    "status": "decided",
+    "style_score": 0.5,
+    "timestamp": "2026-11-07T22:16:07+00:00"
+  },
+  {
+    "creator_id": "attacker_flood",
+    "event": "rejected",
+    "limit": "5 per 1 minute",
+    "reason": "rate_limited",
+    "status": "rejected",
+    "timestamp": "2026-11-07T22:16:07+00:00"
+  }
+]
 ```
+
+Why these ten, in order: FP02 and FP03 (human formal / non-native writing scored 0.84–0.85, labeled AI, both signals agreeing); EV02, EV06 and EV08 (AI text pushed to "human" by sentence-length tricks and by being under the token window, where style_score falls back to exactly 0.5); PI05 (an injection attempt in the text that was scored as plain content); MF03 and MF04 (control characters and pure punctuation got model_score of 0.0 and a confident "human" instead of a rejection); the `creator_id` object entry (RQ06 logged a dict, not a string); and a rate_limited rejection. MF02 and RQ07 returned 500 and have **no** audit entry at all, because they crashed before anything was logged.
 
 **The single worst outcome** — the one I'd least want to explain to a writer
 whose work got caught by it:
