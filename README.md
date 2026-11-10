@@ -520,34 +520,47 @@ FP03: a non-native English speaker writing carefully got the high-confidence AI 
 
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 |---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
+| 1. False positives | ≤ 1 of 20 flagged AI | 0/10 | 0/10 | 0/10 | MET |
+| 2. Score spread | AI mean ≥ 0.20 above human mean | 0.169 | 0.169 | 0.169 | MISSED |
+| 3. Label coverage | Human, unsure and AI all appear | 2/3 | 2/3 | 2/3 | MISSED |
+| 4. Appeal path | under_review, logged, 404 on unknown ID | 5/5 | 5/5 | 5/5 | MET |
+| 5. Bad input | 400 × 3, then 200 | pass | pass | pass | MET |
 
 **Real output from one trial**, pasted as text, naming the file and function
 that produced it:
 
 ```json
+// Criterion 2 and 3 — AI-style text, from run_eval.py via app.py::submit (trial 1, results/run_2026-11-09_2034_before5.md)
+{"status": 200, "guess": "unsure", "confidence": 0.6193, "model_score": 0.7386, "style_score": 0.5,
+ "label": "Our checks couldn't tell whether this was written by a person or with an AI tool. This is only a guess, not a finding. If you'd like someone to look at it, you can appeal.",
+ "sent": "In today's rapidly evolving digital landscape, it is essential for org"}
 
+// Criterion 2 — casual human-style text, same file and function
+{"status": 200, "guess": "human", "confidence": 0.48212093671242084, "model_score": 0.298, "style_score": 0.6304837468496833,
+ "label": "We think this was probably written by a person.",
+ "sent": "ok so my sister called at 6am again about the cat. he's fine. he was j"}
+
+// Criterion 4 — test_appeal.py, app.py::appeal
+{"content_id": "b3d8e552-8916-4be3-b396-e42bc17c8b10", "message": "Thanks. Your appeal has been recorded and this result is now under review.", "status": "under_review"}
+// unknown id (app.py::appeal): 404 {"error": "unknown_content_id", "message": "No submission has that `content_id`."}
+
+// Criterion 5 — app.py::submit, 10,001-character text, then a valid follow-up
+{"status": 400, "guess": null, "confidence": null, "sent": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+{"status": 200, "guess": "human", "confidence": 0.40725, "model_score": 0.129, "style_score": 0.5, "sent": "This is a normal sentence about my morning walk."}
+
+// Audit log entry — audit.py::log_decision (logs/audit.jsonl), from test_audit.py, 20/20 found in all three runs
+{"timestamp": "2026-11-10T01:06:50+00:00", "content_id": "eb7ff8d5-597c-40e3-9c15-76a97f9a2b3e", "creator_id": "eval_audit_1", "guess": "human", "model_score": 0.2864, "style_score": 0.5, "combined_score": 0.3932, "label": "We think this was probably written by a person.", "status": "decided"}
 ```
+
+Criteria 1, 2, 3 and 5 came from `run_eval.py --label before5` (three trials, identical every time). Criterion 4 came from `test_appeal.py` and the audit-log check from `test_audit.py`, each run three times by hand. All three trials matched, so nothing in the pipeline was unstable. One mistake along the way: two scenarios shared a `creator_id` prefix, so the rate limiter (5 per minute per creator) returned 429 on a trial. I renamed the scenarios and reran; the numbers above are from the clean run.
 
 **Diagnoses**
 
-<!-- For each miss AND each broken attack: the stage and the mechanism.
+**Criterion 2, score spread (MISSED: 0.169 against a target of 0.20).** The AI group averaged 0.583 and the human group 0.414. The failure is in signal two and the combining rule, not signal one. `stylometry.py::style_signal` returns exactly 0.5 ("no evidence") for any text with fewer than two sentences or under `MIN_WORDS` (15). All 20 of my AI texts are single sentences, so all 20 have `style_score` 0.5 (the human group: 14 of 20). The model signal does separate the groups (AI texts up to 0.93, human texts at most 0.60), but each AI text is then averaged with 0.5, which halves its distance from 0.5.
 
-     Your service has five stages: the route, signal one, signal two, the
-     combining rule, and the label mapping.
+**Criterion 3, label coverage (MISSED: no `ai` label in 45 texts).** The `ai` label needs a combined score above `AI_THRESHOLD` (0.65). The highest combined score was about 0.64. A second step in `scoring.py::combine_signals` makes it worse: when the signals differ by more than `DISAGREEMENT_GAP` (0.30), the average is pulled halfway back toward 0.5. A strong AI text such as model 0.93 and style 0.5 averages to 0.72, but the gap of 0.43 triggers the pull, giving about 0.61, which is `unsure`. So the signal that is working (model) is cancelled by the signal that has no evidence (style = 0.5), twice. Three of my 20 AI texts were also labelled `human`, which is a model-signal miss.
 
-     Not a diagnosis:  "The evasion attacks got through."
-     A diagnosis:      "Four evasion inputs got through. All four had typos
-                        added to AI-generated text. My second signal measures
-                        word variety, and typos raise word variety — so it read
-                        them as more human. My combining rule weights that
-                        signal at 0.6, so it dragged the whole score down."
-
-     Look for a pattern. Five failures on one signal is one problem, not five. -->
+**Pattern:** One cause drives both misses, the style signal's 0.5 fallback on short input. The fix I will try is to ignore the style signal, and skip the disagreement pull, when the style signal has no evidence (returns exactly 0.5), so the model score is used alone. I'm not lowering either target in `criteria.md`.
 
 
 

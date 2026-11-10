@@ -30,34 +30,95 @@ SCENARIOS = [
         # things you actually wrote. This is the criterion that matters most and
         # it's meaningless with someone else's prose.
         "texts": [
-            "REPLACE ME with a paragraph you wrote yourself.",
-            "REPLACE ME with another one. Ten pieces is the usual number.",
+            "As I was walking towards work a bird followed me from one tree to another",
+            "I saw a homeless person on the street, but I was not sure if how he would use the money given to him",
+            "I went to the office kitchen to get some coffee and found some candies in a basket for give away.",
+            "As I was walking around the buildings, I could feel the heat of the sun directly on my skin, and wondered how field workers do everyday work",
+            "I asked a finance executive to explain some calculations to me, and it seemed reasonably easy.",
+            "I went out during lunch break to the lake to catch a fish, but returned empty handed.",
+            "I tried to make video using AI of me trying to catch a fish and instead a dragon jumped out of the lake.",
+            "The people in my neighborhood said that there was an aligator in the lake, and that they called wildlife to have someone take that aligator away",
+            "On a hot day, I got in my car and was expecting the ac to cool down, but the ac did not work.",
+            "I took my car to the mechanic and they gave me a discount on ac compressor replacement.",
         ],
     },
     {
-        "name": "label coverage",
+        "name": "AI group spread",
         "criterion": 2,
-        # Inputs spread across your score range, so you can check all three
-        # labels are actually reachable.
+        # 20 clearly AI-style texts (drafted with Claude's help; see AI-use notes).
         "texts": [
-            "REPLACE ME with something you're confident is AI-generated.",
-            "REPLACE ME with something you're confident is human-written.",
-            "REPLACE ME with something genuinely borderline.",
+            "In today's rapidly evolving digital landscape, it is essential for organizations to leverage innovative solutions that foster collaboration and drive sustainable growth.",
+            'Artificial intelligence has emerged as a transformative force, offering unprecedented opportunities to enhance productivity, streamline operations, and unlock new possibilities across industries.',
+            'Furthermore, it is important to note that effective communication plays a crucial role in building strong relationships and achieving long-term success in both personal and professional contexts.',
+            'Climate change represents one of the most pressing challenges of our time, requiring coordinated global action, innovative technologies, and a steadfast commitment to sustainability.',
+            'In conclusion, the benefits of regular exercise are multifaceted, encompassing improved physical health, enhanced mental well-being, and a greater overall quality of life.',
+            'Navigating the complexities of modern education requires a holistic approach that balances academic rigor with emotional intelligence, creativity, and lifelong learning.',
+            'Moreover, leveraging data-driven insights enables businesses to make informed decisions, optimize resource allocation, and maintain a competitive edge in a dynamic marketplace.',
+            'Time management is a fundamental skill that empowers individuals to prioritize tasks, reduce stress, and achieve their goals with greater efficiency and confidence.',
+            'The integration of renewable energy sources into the global grid presents both significant opportunities and notable challenges that stakeholders must carefully consider.',
+            'Ultimately, fostering a culture of continuous improvement allows teams to adapt to change, embrace innovation, and deliver exceptional value to customers.',
+            'Cybersecurity is of paramount importance in the digital age, as organizations must safeguard sensitive information against an ever-growing array of sophisticated threats.',
+            'A balanced diet rich in fruits, vegetables, whole grains, and lean proteins is essential for maintaining optimal health and supporting overall well-being.',
+            'Remote work has fundamentally reshaped the modern workplace, offering flexibility and autonomy while also presenting unique challenges related to collaboration and culture.',
+            'By embracing diversity and inclusion, organizations can cultivate an environment where every individual feels valued, empowered, and motivated to contribute their unique perspectives.',
+            'Effective leadership is characterized by clear vision, empathy, and the ability to inspire others to work collaboratively toward a shared and meaningful objective.',
+            'The rise of e-commerce has revolutionized the way consumers shop, providing unparalleled convenience, a vast selection of products, and personalized experiences.',
+            'In summary, mindfulness practices can significantly reduce stress, improve focus, and promote emotional resilience, making them a valuable tool for individuals from all walks of life.',
+            'Sustainable urban planning plays a vital role in creating resilient, livable cities that balance economic development with environmental stewardship and social equity.',
+            'It is worth noting that continuous learning and adaptability are key attributes for thriving in an increasingly interconnected and rapidly changing global economy.',
+            'Overall, technology continues to reshape our world in profound ways, presenting exciting opportunities while also necessitating thoughtful consideration of ethical implications.',
         ],
     },
-    # A bad-input criterion looks like this. Uncomment and adjust if that's one
-    # of your five — these are raw request bodies, sent exactly as written.
-    #
-    # {
-    #     "name": "bad input",
-    #     "criterion": 3,
-    #     "bodies": [
-    #         {"text": "", "creator_id": "eval_bad_empty"},
-    #         {"creator_id": "eval_bad_missing"},          # no text field at all
-    #         {"text": "word " * 50000, "creator_id": "eval_bad_huge"},
-    #         {"text": None, "creator_id": "eval_bad_null"},
-    #     ],
-    # },
+    {
+        "name": "human group spread",
+        "criterion": 2,
+        # 20 clearly casual human-style texts (drafted with Claude's help).
+        "texts": [
+            "ok so my sister called at 6am again about the cat. he's fine. he was just under the couch the whole time lol",
+            'Lost my keys twice this week. Found them in the fridge once. Not proud.',
+            "Dad's truck smells like old coffee and wet dog and honestly I kind of love it.",
+            'We got to the game late, parked three blocks away, and then it started pouring. Worth it though, we won by one.',
+            'I burned the rice again. Smoke alarm went off, neighbor knocked, very embarrassing tuesday.',
+            "My boss said 'quick question' and forty minutes later I'd agreed to run the offsite. Never again.",
+            "Grandma's recipe says 'add flour until it feels right.' Feels right to who, grandma??",
+            "The bus was late so I walked past the bakery and bought a croissant I didn't need. No regrets.",
+            'Spent the whole sunday fixing the bike chain and it still slips on hills. Might just buy a new one.',
+            "He said he'd call back in five minutes. That was last thursday.",
+            'Rainy morning, stale bread, and my phone died at 4%. Great start.',
+            'Honestly the movie was fine, but the guy behind us ate chips like he was being paid per crunch.',
+            'I planted tomatoes in april and the squirrels have eaten every single one. Respect, I guess.',
+            'Our landlord finally fixed the heater, three months and eleven emails later.',
+            'Took the dog to the park and he spent twenty minutes barking at a plastic bag.',
+            'My brother texted me a photo of his sandwich with no context. Ten out of ten, would receive again.',
+            'Forgot my umbrella, bought another one, found the first one in my trunk. Now I own two.',
+            'The elevator at work has been broken since june and somehow everyone is in a better mood.',
+            'I tried yoga once. Pulled a muscle in my back lifting the mat. Done.',
+            "Cousin's wedding was fun until the DJ played the same song four times.",
+        ],
+    },
+    {
+        "name": "label borderline",
+        "criterion": 3,
+        # 5 borderline samples. Criterion 3 = these + the 40 above, so run_eval's
+        # label counts for all three scenarios together answer it.
+        "texts": [
+            'The meeting went well overall. We discussed the timeline, assigned the tasks, and agreed to check in again next week.',
+            'I think the new policy has some benefits, but it also raises a few concerns that we should talk through before deciding.',
+            'Last weekend we visited the museum, which had a good collection and a nice cafe, though it was quite crowded.',
+            'Learning to cook takes practice, but with a few simple recipes and some patience anyone can get comfortable in the kitchen.',
+            'The report summarizes the main findings and recommends three next steps for the team to consider in the coming quarter.',
+        ],
+    },
+    {
+        "name": "bad input",
+        "criterion": 5,
+        "bodies": [
+            {"text": "", "creator_id": "eval_bad_empty"},
+            {"creator_id": "eval_bad_missing"},                      # no text field
+            {"text": "a" * 10001, "creator_id": "eval_bad_huge"},    # 10,001 chars
+            {"text": "This is a normal sentence about my morning walk.", "creator_id": "eval_bad_followup"},  # must still return 200
+        ],
+    },
 
     # TODO: add what your remaining criteria need.
     #
