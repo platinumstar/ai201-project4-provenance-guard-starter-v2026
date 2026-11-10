@@ -58,8 +58,8 @@ MAX_TEXT_LENGTH = 10000
 # down BEFORE you code it, and to put the numbers in your README. Whatever you
 # decide, it goes here.
 
-WEIGHT_MODEL_SIGNAL = 0.5
-WEIGHT_STYLE_SIGNAL = 0.5
+WEIGHT_MODEL_SIGNAL = 0.65  # was 0.5 (Milestone 5: reweight toward the model signal)
+WEIGHT_STYLE_SIGNAL = 0.35  # was 0.5
 
 # When the two signals differ by more than this, they are disagreeing, and the
 # combined score is pulled toward 0.5 ("unsure") by DISAGREEMENT_PULL: 0 leaves
