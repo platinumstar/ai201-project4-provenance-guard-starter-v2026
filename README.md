@@ -613,6 +613,67 @@ Criterion 1 came from `run_eval.py --label before6` (20 of my own texts, results
 | MF05 | malformed (one very long word) | unsure 0.624 | ai 0.662 | HELD → **BROKE** (my judgment) |
 | MF06 | malformed (emoji only) | unsure 0.624 | ai 0.661 | HELD → **BROKE** (my judgment) |
 
+**Full after table (all 56 attacks, same format as the before table).** Verdicts follow the same rules as the before table; the five that changed are EV01, EV02, EV06, MF05 and MF06.
+
+| ID | Family | Targeting | Status | Content ID | Guess | Score | Verdict |
+|---|---|---|---|---|---|---|---|
+| EV01 | evasion | signal two: typos raise word variety | 200 | `d85e7ebf-82b2-48aa-8766-b1bc31f49617` | human | 0.458 | BROKE |
+| EV02 | evasion | signal two: broken-up sentences raise length spread | 200 | `b9c0ea52-a92b-4cdb-9359-5f0e229abd06` | unsure | 0.523 | HELD |
+| EV03 | evasion | signal two: a pasted quotation changes the shape | 200 | `d1460d4f-309b-4150-ab7a-e474d63257dc` | ai | 0.654 | HELD |
+| EV04 | evasion | signal one: unusual words raise perplexity | 200 | `3617b3c0-5d8f-4a79-ad19-5a3a5f2e1bdd` | ai | 0.697 | HELD |
+| EV05 | evasion | both signals: heavy human editing pass | 200 | `ca14dc18-c01e-4c43-8864-d7751f723839` | human | 0.345 | BROKE |
+| EV06 | evasion | signal two: one very long sentence and one very short | 200 | `eeeea100-76f0-430e-8bae-e07b2662f317` | unsure | 0.519 | HELD |
+| EV07 | evasion | signal two: padding with punctuation | 200 | `2f26c06f-7860-44ae-8076-487af460eeb4` | unsure | 0.556 | HELD |
+| EV08 | evasion | signal one: text below the token window | 200 | `7091afe0-a54e-470e-8ffd-c220a8a40551` | human | 0.334 | BROKE |
+| EV09 | evasion | both: AI text with a human opening paragraph bolted on | 200 | `12b3831b-cee7-40bc-9fb9-693ebf2763e7` | ai | 0.682 | HELD |
+| EV10 | evasion | signal two: repeated stanza structure | 200 | `b16b6009-8fe7-4d60-954a-bce3187f8c80` | ai | 0.930 | HELD |
+| FP01 | false_positive | plain, clear human writing with no flourishes | 200 | `c8da88a0-f949-4ef3-971b-cd52eb4c3a8b` | ai | 0.659 | BROKE |
+| FP02 | false_positive | human writing in a formal register | 200 | `ece22f68-462b-4655-9161-f458b321e063` | ai | 0.807 | BROKE |
+| FP03 | false_positive | a non-native English speaker writing carefully | 200 | `6f763e13-0eb7-4354-9d4d-5ac3246e84c9` | ai | 0.836 | BROKE |
+| FP04 | false_positive | a student essay written to a rubric | 200 | `08da3f63-cd49-4806-9b02-ee560c171ad9` | ai | 0.830 | BROKE |
+| FP05 | false_positive | technical documentation written by a person | 200 | `a492197e-3cfb-43a6-836f-a99d89e840fa` | ai | 0.823 | BROKE |
+| FP06 | false_positive | a person imitating a formal template | 200 | `7781834c-cff5-4cf9-816e-d953d889f3cd` | ai | 0.816 | BROKE |
+| FP07 | false_positive | human writing that repeats a phrase deliberately | 200 | `3af6970f-478f-44f8-b5c0-72a25d5b4378` | unsure | 0.619 | HELD |
+| FP08 | false_positive | very short genuine human submission | 200 | `7cef6843-a485-4abd-8c78-3d91a3bdec6c` | human | 0.384 | HELD |
+| PI01 | prompt_injection | instruction to ignore the check | 200 | `668eb633-2612-4573-89bc-6e4f82efbe59` | unsure | 0.516 | HELD |
+| PI02 | prompt_injection | instruction disguised as a system message | 200 | `06746c67-a77a-4953-9d27-c024d57fa34d` | human | 0.406 | HELD |
+| PI03 | prompt_injection | instruction wrapped in the writer's voice | 200 | `bf16d309-b01b-4bd4-99d5-48046fcc4970` | unsure | 0.647 | HELD |
+| PI04 | prompt_injection | attempt to make the label text hostile | 200 | `83f993ad-4d07-4f88-8254-7ac3d08131b1` | unsure | 0.549 | HELD |
+| PI05 | prompt_injection | attempt to inject into the audit log | 200 | `937f558f-e284-4b23-9c54-dd54a4b0575e` | unsure | 0.506 | HELD |
+| PI06 | prompt_injection | instruction plus real human text | 200 | `94abba8a-de1c-4b84-834d-878c7a4c4ae9` | unsure | 0.626 | HELD |
+| MF01 | malformed | text is only whitespace | 400 | `—` | — | — | HELD |
+| MF02 | malformed | text is a single character | 500 | `—` | — | — | BROKE |
+| MF03 | malformed | text is control characters | 200 | `9f7c281f-9765-4e3b-85e6-0599528d83f1` | human | 0.338 | BROKE |
+| MF04 | malformed | text is only punctuation | 200 | `b76d69dd-7aab-4068-b5b3-2e03650a51dc` | human | 0.341 | BROKE |
+| MF05 | malformed | text is a very long single word | 200 | `4c482e51-b3db-4d35-9795-bbe2c47d8f5c` | ai | 0.662 | BROKE |
+| MF06 | malformed | text is emoji only | 200 | `64e49379-9f88-431e-a2e2-934b6f1e431b` | ai | 0.661 | BROKE |
+| MF07 | malformed | text is right-to-left script | 200 | `36291fd4-ddf4-497e-aac4-1051f5cc96bd` | unsure | 0.632 | HELD |
+| MF08 | malformed | text is 60,000 characters | 400 | `—` | — | — | HELD |
+| RQ01 | malformed | no text field at all | 400 | `—` | — | — | HELD |
+| RQ02 | malformed | no creator_id | 200 | `3bc81753-b196-453d-aa12-61b3b876d147` | human | 0.331 | HELD |
+| RQ03 | malformed | text is a number | 400 | `—` | — | — | HELD |
+| RQ04 | malformed | text is a list | 400 | `—` | — | — | HELD |
+| RQ05 | malformed | text is null | 400 | `—` | — | — | HELD |
+| RQ06 | malformed | creator_id is an object | 200 | `df1c3234-fc53-4ea1-b637-76c3381dbab0` | human | 0.353 | BROKE |
+| RQ07 | malformed | body is a JSON array, not an object | 500 | `—` | — | — | BROKE |
+| RQ08 | malformed | body is unparseable JSON | 400 | `—` | — | — | HELD |
+| RQ09 | malformed | body is empty | 400 | `—` | — | — | HELD |
+| RQ10 | malformed | body is form-encoded, not JSON | 429 | `—` | — | — | HELD |
+| RQ11 | malformed | body is JSON claiming to be plain text | 429 | `—` | — | — | HELD |
+| RQ12 | malformed | deeply nested JSON | 400 | `—` | — | — | HELD |
+| FL01_01 | flood_same_creator | 20 rapid submissions from one creator | 200 | `33c7fdef-71eb-41b7-bb27-b7f1b34eac5a` | human | 0.347 | HELD |
+| FL01_02 | flood_same_creator | 20 rapid submissions from one creator | 200 | `062cd007-cfc0-46fe-b97f-59e81425ed6a` | human | 0.347 | HELD |
+| FL01_03 | flood_same_creator | 20 rapid submissions from one creator | 200 | `38de6f72-8bf1-488a-bb29-2de102190d0d` | human | 0.347 | HELD |
+| FL01_04 | flood_same_creator | 20 rapid submissions from one creator | 200 | `3149bdec-d868-42e9-a04c-ed42f7da5218` | human | 0.347 | HELD |
+| FL01_05 | flood_same_creator | 20 rapid submissions from one creator | 200 | `d6e17bd4-0207-4a8b-be16-7d21134a9a6e` | human | 0.347 | HELD |
+| FL01_06 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_07 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_08 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_09 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_10 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_11 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_12 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+
 By family, broken attacks before → after: evasion 4 → 3 (EV02 and EV06 fixed, EV01 newly broken; EV05 and EV08 still broken), false positives 6 → 6 (unchanged), prompt injection 0 → 0, malformed 5 → 7 (MF02, MF03, MF04, RQ06, RQ07 as before, plus MF05 and MF06 now called `ai`), flood 0 → 0. I marked MF05 and MF06 BROKE because a confident AI accusation on a single long word or on emoji is not a decision the signals can support; that is my judgment, not an automatic mark.
 
 **Five criteria, before and after (three trials each, identical across trials):**
@@ -635,9 +696,9 @@ By family, broken attacks before → after: evasion 4 → 3 (EV02 and EV06 fixed
 
 **The six false-positive attacks (FP01-FP06).** Careful, formal or rubric-written human prose scores high on both signals, so changing the weights between them cannot help. Fixing this needs a signal that measures something else, or a wider `unsure` band, which would let more AI text through. I stopped because neither was in scope for one change.
 
-**Evasions EV01, EV05 and EV08.** EV01 (typos) newly broke with the new weights, EV05 (heavy human editing) fools both signals at once, and EV08 is 10 words, under `MIN_WORDS`, so the style signal has nothing to say. I'd lower `MIN_WORDS` or refuse to label text that is too short to judge. I stopped because each of these is a separate change.
+**Evasions EV01, EV05 and EV08.** EV01 (typos added to AI text) newly broke with the new weights. Stage: signal one and the combining rule. The typos raise perplexity, so the model signal reads it as human (0.16), while the style signal still reads it as AI (0.88). With equal weights the big disagreement pulled the score to 0.51 (`unsure`); with the model weighted at 0.65 the human-looking model score wins and it lands at 0.46 (`human`). EV05 (heavy human editing) fools both signals at once, and EV08 is 10 words, under `MIN_WORDS`, so the style signal has nothing to say. I'd lower `MIN_WORDS` or refuse to label text that is too short to judge. I stopped because each of these is a separate change.
 
-**Malformed requests: MF02, MF03, MF04, MF05, MF06, RQ06 and RQ07.** These all come from the route doing too little input validation, and my change made MF05 and MF06 worse. I'd add checks to `app.py::submit` before the signals run: the body must be a JSON object, `creator_id` must be a string, and the text needs a minimum number of real words (this also stops MF02 crashing with a 500, and rejects control-character and punctuation-only text). I stopped because the weights fix and the validation fix are different changes, and I wanted to measure one.
+**Malformed requests: MF02, MF03, MF04, MF05, MF06, RQ06 and RQ07.** These all come from the route doing too little input validation. MF05 and MF06 (one very long word, emoji only) are a separate case my change made worse: signal one scores such degenerate text as almost perfectly predictable (model 0.998) and the style signal has no evidence (0.5), so at equal weights they averaged 0.62 (`unsure`), but at model weight 0.65 they reach 0.66 and cross `AI_THRESHOLD`. I'd add checks to `app.py::submit` before the signals run: the body must be a JSON object, `creator_id` must be a string, and the text needs a minimum number of real words (this also stops MF02 crashing with a 500, and rejects control-character and punctuation-only text). I stopped because the weights fix and the validation fix are different changes, and I wanted to measure one.
 
 **Not tested:** Criterion 4 (the appeal path) was not rerun after the weights change, because the weights do not touch it. Criterion 1 is tested on 20 texts I wrote myself, and criteria 2 and 3 use 20 AI and 20 human-style texts written with Claude's help, so the results are indicative, not a measure of real-world accuracy.
 
