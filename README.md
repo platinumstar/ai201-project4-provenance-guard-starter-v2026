@@ -293,6 +293,18 @@ The original decision stays in the log unchanged and the appeal sits after it, w
 - *What came back:* Claude said my "unsure" label ("that says nothing bad about you or your work") sounded like a polite suspicion, and that it didn't tell the writer whether anything would happen to them or mention the appeal option, which only the AI label did.
 - *What I changed:* I rewrote "unsure" to say what the system couldn't do, called the result "only a guess, not a finding", and added the appeal option. I also noted my reasoning in Label Variants.
 
+**Moment 3 (unit 8)**
+
+- *What I asked for:* I asked Claude to turn my five criteria into runnable tests and run them three times each, and to draft the 20 AI-style and 20 casual human-style texts for the score-spread and label-coverage criteria. I wrote the 20 texts for the false-positive criterion myself.
+- *What came back:* The third trial of one group returned HTTP 429 on all 20 requests. Claude traced it to `run_eval.py`, which builds each `creator_id` from the first 12 characters of the scenario name, so two of my scenarios ("score spread AI group" and "score spread human group") shared the same 20 IDs and hit my own rate limit of 5 per minute per creator. It also first reported a 0/20 audit-log result that was its own script's bug (it filtered on an `event` field that decision entries do not have).
+- *What I changed:* I renamed the scenarios so their IDs differ, waited out the limit and reran for clean results. I discarded the earlier runs and fixed the audit-log check to match on `status: "decided"`.
+
+**Moment 4 (unit 8)**
+
+- *What I asked for:* I asked Claude to explain why criteria 1, 2 and 3 missed and to write the diagnoses.
+- *What came back:* Its first diagnosis said the model signal never scored AI text above 0.80. When I checked the results file, the AI group's model score reached 0.93, so that claim was wrong. The real mechanism was that the style signal returns 0.5 on every single-sentence text and the disagreement pull then drags strong AI scores back toward 0.5.
+- *What I changed:* I rewrote the diagnoses from the recorded scores, and used the same numbers to test a weight change offline before touching the service. I chose 0.65 / 0.35 and kept the other settings the same, so the effect could be read.
+
 <!-- ═══════════════════════ UNIT 8 — THE TEST ═══════════════════════ -->
 
 ---
