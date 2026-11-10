@@ -619,15 +619,19 @@ By family, broken attacks before → after: evasion 4 → 3 (EV02 and EV06 fixed
 
 ## What's Still Broken
 
-<!-- For each attack still getting through and each criterion still missed:
-     what you'd do, and why you stopped. -->
+**Criterion 1, false positives (2 of 20 of my own texts still labelled `ai`, target at most 1).** The style signal gives short, plain, evenly sized sentences a score near 1.0, and the model signal scores some of my everyday sentences high too (0.75 for "I saw a homeless person…"). I'd recalibrate `SPREAD_RANGE` and `PUNCT_RANGE` in `stylometry.py` on a set of plain human texts, so ordinary writing stops reading as machine-made. I stopped because that is a second change, and this milestone allows one so the result can be read.
 
+**The six false-positive attacks (FP01-FP06).** Careful, formal or rubric-written human prose scores high on both signals, so changing the weights between them cannot help. Fixing this needs a signal that measures something else, or a wider `unsure` band, which would let more AI text through. I stopped because neither was in scope for one change.
 
+**Evasions EV01, EV05 and EV08.** EV01 (typos) newly broke with the new weights, EV05 (heavy human editing) fools both signals at once, and EV08 is 10 words, under `MIN_WORDS`, so the style signal has nothing to say. I'd lower `MIN_WORDS` or refuse to label text that is too short to judge. I stopped because each of these is a separate change.
+
+**Malformed requests: MF02, MF03, MF04, MF05, MF06, RQ06 and RQ07.** These all come from the route doing too little input validation, and my change made MF05 and MF06 worse. I'd add checks to `app.py::submit` before the signals run: the body must be a JSON object, `creator_id` must be a string, and the text needs a minimum number of real words (this also stops MF02 crashing with a 500, and rejects control-character and punctuation-only text). I stopped because the weights fix and the validation fix are different changes, and I wanted to measure one.
+
+**Not tested:** Criterion 4 (the appeal path) was not rerun after the weights change, because the weights do not touch it. Criterion 1 is tested on 20 texts I wrote myself, and criteria 2 and 3 use 20 AI and 20 human-style texts written with Claude's help, so the results are indicative, not a measure of real-world accuracy.
 
 **The trade I'd make if this ran for real:**
 
-<!-- Two sentences. Fewer wrong accusations means more AI text getting through.
-     Say which way you'd go and WHO PAYS FOR IT. -->
+If this ran for real I would keep the `unsure` band wide and move `AI_THRESHOLD` up, accepting that more AI text would pass as `unsure` or `human`. The cost of getting this wrong falls on the writers: a plain-spoken person or a non-native English speaker who is told "this may have been written with an AI tool" has to prove their own work is theirs, while the cost of missed AI text falls on the site, which is smaller. My own numbers show who pays today, because the false accusations land on short plain sentences and careful formal writing, which is how many real people write.
 
 
 
