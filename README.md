@@ -520,7 +520,7 @@ FP03: a non-native English speaker writing carefully got the high-confidence AI 
 
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 |---|---|---|---|---|---|
-| 1. False positives | ≤ 1 of 20 flagged AI | 0/10 | 0/10 | 0/10 | MET |
+| 1. False positives | ≤ 1 of 20 flagged AI | 3/20 | 3/20 | 3/20 | MISSED |
 | 2. Score spread | AI mean ≥ 0.20 above human mean | 0.169 | 0.169 | 0.169 | MISSED |
 | 3. Label coverage | Human, unsure and AI all appear | 2/3 | 2/3 | 2/3 | MISSED |
 | 4. Appeal path | under_review, logged, 404 on unknown ID | 5/5 | 5/5 | 5/5 | MET |
@@ -552,15 +552,17 @@ that produced it:
 {"timestamp": "2026-11-10T01:06:50+00:00", "content_id": "eb7ff8d5-597c-40e3-9c15-76a97f9a2b3e", "creator_id": "eval_audit_1", "guess": "human", "model_score": 0.2864, "style_score": 0.5, "combined_score": 0.3932, "label": "We think this was probably written by a person.", "status": "decided"}
 ```
 
-Criteria 1, 2, 3 and 5 came from `run_eval.py --label before5` (three trials, identical every time). Criterion 4 came from `test_appeal.py` and the audit-log check from `test_audit.py`, each run three times by hand. All three trials matched, so nothing in the pipeline was unstable. One mistake along the way: two scenarios shared a `creator_id` prefix, so the rate limiter (5 per minute per creator) returned 429 on a trial. I renamed the scenarios and reran; the numbers above are from the clean run.
+Criterion 1 came from `run_eval.py --label before6` (20 of my own texts, results/run_2026-11-09_2215_before6.md); criteria 2, 3 and 5 came from `run_eval.py --label before5` (three trials, identical every time). Criterion 4 came from `test_appeal.py` and the audit-log check from `test_audit.py`, each run three times by hand. All three trials matched, so nothing in the pipeline was unstable. One mistake along the way: two scenarios shared a `creator_id` prefix, so the rate limiter (5 per minute per creator) returned 429 on a trial. I renamed the scenarios and reran; the numbers above are from the clean run.
 
 **Diagnoses**
+
+**Criterion 1, false positives (MISSED: 3 of 20 of my own texts labelled `ai` in every trial, target at most 1).** The first 10 texts I tested were single sentences, so the style signal returned its 0.5 fallback and none was flagged (0 of 10). My other 10 are two sentences each, and three of them were flagged: "A representative gave me a report…" (model 0.63, style 1.0, combined 0.657), "I told my boss via text…" (0.71, 1.0, 0.855) and "I found that I could not understand a lot of text in a table…" (0.65, 1.0, 0.662). The stage that fails is signal two. `stylometry.py::style_signal` scores plain, short, evenly sized sentences with little punctuation at 1.0 (most AI-like), which is how ordinary human writing looks. With equal weights, a style score of 1.0 plus a model score near 0.65 pushes the average over `AI_THRESHOLD` (0.65). The 0.5 fallback was hiding this problem on the first 10 texts.
 
 **Criterion 2, score spread (MISSED: 0.169 against a target of 0.20).** The AI group averaged 0.583 and the human group 0.414. The failure is in signal two and the combining rule, not signal one. `stylometry.py::style_signal` returns exactly 0.5 ("no evidence") for any text with fewer than two sentences or under `MIN_WORDS` (15). All 20 of my AI texts are single sentences, so all 20 have `style_score` 0.5 (the human group: 14 of 20). The model signal does separate the groups (AI texts up to 0.93, human texts at most 0.60), but each AI text is then averaged with 0.5, which halves its distance from 0.5.
 
 **Criterion 3, label coverage (MISSED: no `ai` label in 45 texts).** The `ai` label needs a combined score above `AI_THRESHOLD` (0.65). The highest combined score was about 0.64. A second step in `scoring.py::combine_signals` makes it worse: when the signals differ by more than `DISAGREEMENT_GAP` (0.30), the average is pulled halfway back toward 0.5. A strong AI text such as model 0.93 and style 0.5 averages to 0.72, but the gap of 0.43 triggers the pull, giving about 0.61, which is `unsure`. So the signal that is working (model) is cancelled by the signal that has no evidence (style = 0.5), twice. Three of my 20 AI texts were also labelled `human`, which is a model-signal miss.
 
-**Pattern:** One cause drives both misses, the style signal's 0.5 fallback on short input. The fix I will try is to ignore the style signal, and skip the disagreement pull, when the style signal has no evidence (returns exactly 0.5), so the model score is used alone. I'm not lowering either target in `criteria.md`.
+**Pattern:** All three misses trace to `style_signal` in `stylometry.py`. On short single-sentence text it returns 0.5, which hides the model signal (criteria 2 and 3). On short two-sentence plain text it returns 1.0, which wrongly accuses human writing (criterion 1). The fix I will try is to ignore the style signal, and skip the disagreement pull, when the style signal has no evidence (returns exactly 0.5), so the model score is used alone. That alone will not fix criterion 1, because there the style signal is confidently wrong, so its scaling (`SPREAD_RANGE`, `PUNCT_RANGE`) also needs recalibrating on short human text. I'm not lowering either target in `criteria.md`.
 
 
 
